@@ -1,0 +1,41 @@
+# Read the input file
+file_in = '01/input.txt'
+with open(file_in) as f:
+    lines = f.read().split('\n')
+
+# Keep track of the total Calories carried by each Elf
+elf_calories = {}
+current_elf = None
+for line in lines:
+    if line == "":
+        # An empty line indicates a change in the Elf carrying the food
+        current_elf = None
+    else:
+        # Parse the Calories of the current food item
+        calories = int(line)
+
+        if current_elf is None:
+            # If this is the first food item for this Elf, create a new entry in our dictionary
+            current_elf = len(elf_calories) + 1
+            elf_calories[current_elf] = 0
+
+        # Add the Calories of the current food item to the total Calories carried by this Elf
+        elf_calories[current_elf] += calories
+
+# Find the Elf carrying the most Calories
+max_calories = 0
+max_elf = None
+for elf, calories in elf_calories.items():
+    if calories > max_calories:
+        max_calories = calories
+        max_elf = elf
+
+# Print the result
+print(f"Elf {max_elf} is carrying the most Calories with a total of {max_calories}.")
+
+# Find the top three Elves carrying the most Calories
+top_elves = sorted(elf_calories, key=elf_calories.get, reverse=True)[:3]
+
+# Print the result
+total_calories = sum(elf_calories[elf] for elf in top_elves)
+print(f"The top three Elves are {top_elves} with a total of {total_calories} Calories.")
