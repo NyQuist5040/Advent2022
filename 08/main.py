@@ -1,7 +1,7 @@
 import numpy as np
 
 # Read the input grid from the file
-with open('08/input_demo.txt') as f:
+with open('08/input.txt') as f:
   grid = np.array([list(map(int, line.strip())) for line in f])
 
 grid_height, grid_width = grid.shape
@@ -23,67 +23,52 @@ for i in range(grid_height):
 # Question 1: Print the final count of visible trees
 print(count)
 
-scenic_scores = np.ones(grid.shape, np.int8) * -1
+def compute_steps_in_direction(grid, i, j, cardinal_direction):
+  grid_height, grid_width = grid.shape
+  steps = 0
+
+  # Define the directions as vectors
+  direction = {
+  'north' : (-1, 0),
+  'south' : (1, 0),
+  'east' : (0, 1),
+  'west' : (0, -1),
+  }[cardinal_direction]
+
+  # Iterate until we reach the edge of the grid or encounter a taller tree
+  next_i, next_j = i, j
+  while True:
+    # Compute the next position based on the current position and the direction vector
+    next_i += direction[0]
+    next_j += direction[1]
+
+    # Check if the next position is within the grid
+    if 0 <= next_i < grid_height and 0 <= next_j < grid_width:
+      # There is a tree at the next position
+      steps += 1
+
+      # Check if the tree at the next position is taller than the current tree
+      if grid[next_i, next_j] >= grid[i, j]:
+        # The tree at the next position is taller, so we stop iterating
+        break
+    else:
+      # We reached the edge of the grid, so we stop iterating
+      break
+
+  return steps
+
+scenic_scores = np.ones(grid.shape, np.int32) * -1
 # Iterate through each row and column in the grid
 for i in range(grid_height):
   for j in range(grid_width):
     # Compute the scenic score for the current tree by counting the number of steps that can be taken in each direction before encountering a tree that is taller
-    steps_west = 0
-    steps_east = 0
-    steps_north = 0
-    steps_south = 0
-
-    for k in range(1, grid_width):
-      # If the current tree is not on the edge of the grid, check the number of steps that can be taken to the west before encountering a taller tree
-      if j - k >= 0:
-        # There is a tree
-        steps_west += 1
-        if grid[i, j-k] >= grid[i,j]:
-            # The tree stops the viw
-            break
-      else:
-        # We reached the edge
-        break
-
-    for k in range(1, grid_width):
-      # If the current tree is not on the edge of the grid, check the number of steps that can be taken to the east before encountering a taller tree
-      if j + k < grid_width:
-        # There is a tree
-        steps_east += 1
-        if grid[i, j+k] >= grid[i,j]:
-            # The tree stops the view
-            break
-      else:
-        # We reached the edge
-        break
-
-    for k in range(1, grid_height):
-      # If the current tree is not on the edge of the grid, check the number of steps that can be taken to the north before encountering a taller tree
-      if i - k >= 0:
-        # There is a tree
-        steps_north += 1
-        if grid[i-k, j] >= grid[i,j]:
-            # The tree stops the view
-            break
-      else:
-        # We reached the edge
-        break
-
-    for k in range(1, grid_height):
-      # If the current tree is not on the edge of the grid, check the number of steps that can be taken to the south before encountering a taller tree
-      if i + k < grid_height:
-        # There is a tree
-        steps_south += 1
-        if grid[i+k, j] >= grid[i,j]:
-            # The tree stops the view
-            break
-      else:
-        # We reached the edge
-        break
+    steps_west = compute_steps_in_direction(grid, i, j, 'west')
+    steps_east = compute_steps_in_direction(grid, i, j, 'east')
+    steps_north = compute_steps_in_direction(grid, i, j, 'north')
+    steps_south = compute_steps_in_direction(grid, i, j, 'south')
 
     scenic_score = steps_west * steps_east * steps_north * steps_south
     scenic_scores[i, j] = scenic_score
 
 # Question 2
 print(np.max(scenic_scores))
-print(scenic_scores)
