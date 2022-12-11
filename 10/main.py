@@ -16,11 +16,24 @@ class Computer:
 
         self.signal_strength_collect = [20, 60, 100, 140, 180, 220]
         self.signal_strength = []
+
+        self.image = ''
         
 
     def cycle(self) -> None:
 
-        # Collect the signal strength if necessary
+        # Draw the pixel in position cycle_n - 1
+        pixel_pos_on_row = (self.cycle_n - 1) % 40
+        if abs(pixel_pos_on_row - self.register) <= 1:
+            self.image += '#'
+        else:
+            self.image += '.'
+
+        # Start a mew row of the image if necessary
+        if self.cycle_n % 40 == 0:
+            self.image += '\n' 
+
+        # Collect the signal strength if necessary, also 
         if self.cycle_n in self.signal_strength_collect:
             self.signal_strength.append(self.cycle_n * self.register)
         
@@ -55,6 +68,10 @@ class Computer:
 
 computer = Computer(instructions)
 
+computer.cycle_n_times(240)
+
 # Question 1
-computer.cycle_n_times(220)
 print(sum(computer.signal_strength))
+
+# Question 2
+print(computer.image)
