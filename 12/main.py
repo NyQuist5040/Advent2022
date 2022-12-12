@@ -106,8 +106,12 @@ def build_path_iteratively(map, target):
         else:
             break
 
-    return np.array(min_dist, np.int32)
+    return min_dist
 
 # Question 1
 min_paths = build_path_iteratively(elevation, ending)
-print(min_paths[starting])
+print(int(min_paths[starting]))
+
+# Question 2
+
+print(int(np.min(min_paths, initial=9999, where=(elevation==1))))
