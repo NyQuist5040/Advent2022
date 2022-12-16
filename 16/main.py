@@ -1,7 +1,7 @@
 import re
 
 # Read input file
-with open('16/input.txt') as f:
+with open('16/input_demo.txt') as f:
     txt_lines = f.read().split('\n')
 
 
@@ -94,6 +94,23 @@ class Explorer:
 
         return possible_paths
 
+    def follow_path(self, path):
+        # Returns a new Explorer object that has followed path
+
+        new_explorer = self.copy()
+
+        # Time spent: distance + 1 (for valve opening)
+        new_explorer.spend_minute(path[1] + 1)
+
+        # Move to the destination
+        new_explorer.position = path[0]
+
+        # Open the valve
+        new_explorer.releasing_rate += new_explorer.position.flow_rate
+        new_explorer.opened_valves.append(new_explorer.position)
+
+        return new_explorer
+
     def explore(self, indexing_dict):
 
         # Find all possible paths
@@ -109,25 +126,66 @@ class Explorer:
         explorers = []
 
         for path in possible_paths:
-            new_explorer = self.copy()
+            # New explorer that is a copy of self that has then explored the next path.
+            new_explorer = self.follow_path(path)
 
-            # Time spent: distance + 1 (for valve opening)
-            new_explorer.spend_minute(path[1] + 1)
-
-            # Move to the destination
-            new_explorer.position = path[0]
-
-            # Open the valve
-            new_explorer.releasing_rate += new_explorer.position.flow_rate
-            new_explorer.opened_valves.append(new_explorer.position)
-
-            # Recursive xplore from this point
+            # Recursive explore from this point
             explorers.append(new_explorer.explore(indexing_dict))
 
         # Find the one with maximum total release and return it
         explorers_total_released = [a.total_released for a in explorers]
         return explorers[explorers_total_released.index(max(explorers_total_released))]
 
+
+class ExplorerTandem:
+    def __init__(self, starting_valve, time_left=26) -> None:
+        self.explorer_1 = Explorer(starting_valve, time_left)
+        self.explorer_2 = Explorer(starting_valve, time_left)
+
+    def __str__(self) -> str:
+        return f'Explorer tandem with two explorers:\n' + str(self.explorer_1) + str(self.explorer_2)
+
+    def copy(self):
+        new_object = type(self)(None, None)
+        new_object.explorer_1 = self.explorer_1.copy()
+        new_object.explorer_2 = self.explorer_2.copy()
+
+    def follow_paths(self, path_1, path_2):
+        # Returns a new ExplorerTandem where explorers 1 and 2 respectively followed paths 1 and 2
+
+        new_tandem = type(self)(None, None)
+
+        new_1 = self.explorer_1.follow_path(path_1)
+        new_2 = self.explorer_1.follow_path(path_2)
+
+        # Add to each explorer the valve opened by the other
+        new_1.opened_valves.append(path_2[0])
+        new_2.opened_valves.append(path_1[0])
+
+        new_tandem.explorer_1 = new_1
+        new_tandem.explorer_2 = new_2
+
+        return new_tandem
+
+    def explore(self, indexing_dict):
+        # explore with both explorers at the same time
+
+        # Find all possible paths for each explorer
+        # both possible paths lists are the same length, refering to the same valves in the same order
+        possible_paths_1 = self.explorer_1.find_valid_paths(indexing_dict)
+        possible_paths_2 = self.explorer_2.find_valid_paths(indexing_dict)
+
+        # ending condition
+        if not possible_paths_1:
+            # Just wait here till the end
+            self.explorer_1.spend_minute(self.time_left)
+            self.explorer_2.spend_minute(self.time_left)
+            return self
+
+        # If there is only one valve left
+        if len(possible_paths_1) == 1:
+            # Send the closest explorer to it
+            if possible_paths_1[0][1] < possible_paths_2[0][1]:
 
 
 # Parse input
@@ -141,6 +199,7 @@ for row in txt_lines:
 
     all_valves[name] = Valve(name, flow_rate, tunnels)
 
+
 # Initialize the direct pointers to other valves in each valve
 for valve in all_valves.values():
     valve.link_tunnels(all_valves)
@@ -148,6 +207,11 @@ for valve in all_valves.values():
 for valve in all_valves.values():
     valve.compute_distances(all_valves)
 
-# Initialize the explorer
+
+# Question 1
 explorer = Explorer(all_valves['AA'], 30)
 print(explorer.explore(all_valves))
+
+# Question 2
+tandem = ExplorerTandem(all_valves['AA'], 5)
+print(tandem)
